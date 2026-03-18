@@ -69,21 +69,6 @@ fun RegisterAccountScreen(navController: NavController, viewModel: RegisterAccou
             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
             trailing = { TextButton(onClick = { showPassword = !showPassword }) { Text(if (showPassword) "🙈" else "👁", color = AppMuted) } }
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            Checkbox(
-                checked = accepted,
-                onCheckedChange = { accepted = it },
-                colors = CheckboxDefaults.colors(checkedColor = AppBlue, uncheckedColor = AppMuted)
-            )
-            Text(
-                text = "Даю согласие на обработку\nперсональных данных",
-                color = AppText,
-                fontSize = 14.sp,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier.padding(top = 10.dp)
-            )
-        }
         Spacer(modifier = Modifier.height(20.dp))
         PrimaryButton(text = "Зарегистрироваться", onClick = {
             viewModel.clearError()
