@@ -55,9 +55,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
             else -> {
                 Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 18.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("≡", color = AppText, fontSize = 28.sp, modifier = Modifier.clickable { navController.navigate(navRoutes.sideMenu) })
                         Text("Главная", color = AppText, fontSize = 28.sp, fontWeight = FontWeight.Normal)
-                        Box(modifier = Modifier.size(48.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) { Text("👜") }
                     }
                     Spacer(modifier = Modifier.height(22.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {

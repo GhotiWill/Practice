@@ -10,7 +10,6 @@ object navRoutes {
     const val signIn = "sign_in"
     const val verification = "verification/{email}"
     const val verificationBase = "verification"
-    const val sideMenu = "side_menu"
     const val loyalty = "loyalty"
     const val favorite = "favorite"
 }

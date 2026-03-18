@@ -56,7 +56,6 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 18.dp).verticalScroll(rememberScrollState())) {
             androidx.compose.foundation.layout.Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("≡", color = AppText, fontSize = 28.sp, modifier = Modifier.clickable { navController.navigate(navRoutes.sideMenu) })
                 Text("Профиль", color = AppText, fontSize = 22.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 Box(modifier = Modifier.size(36.dp).background(AppBlue, CircleShape).clickable { editMode = !editMode }, contentAlignment = Alignment.Center) {
                     Text("✎", color = Color.White, fontSize = 16.sp, modifier = Modifier.align(Alignment.Center))

@@ -14,7 +14,6 @@ import com.example.bardakovexam.presentation.screens.HomeScreen
 import com.example.bardakovexam.presentation.screens.LoyaltyCardScreen
 import com.example.bardakovexam.presentation.screens.ProfileScreen
 import com.example.bardakovexam.presentation.screens.RegisterAccountScreen
-import com.example.bardakovexam.presentation.screens.SideMenuScreen
 import com.example.bardakovexam.presentation.screens.SignInScreen
 import com.example.bardakovexam.presentation.screens.VerificationScreen
 
@@ -30,7 +29,6 @@ fun navHost() {
         composable(navRoutes.forgotPassword) { ForgotPasswordScreen(navController) }
         composable(navRoutes.home) { HomeScreen(navController) }
         composable(navRoutes.signIn) { SignInScreen(navController) }
-        composable(navRoutes.sideMenu) { SideMenuScreen(navController) }
         composable(navRoutes.loyalty) { LoyaltyCardScreen(navController) }
         composable(navRoutes.favorite) { FavoriteScreen(navController) }
         composable(

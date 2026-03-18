@@ -148,7 +148,7 @@ fun BottomNavBar(currentRoute: String, navController: NavController) {
         "⌂" to navRoutes.home,
         "♡" to navRoutes.favorite,
         "👜" to navRoutes.catalog,
-        "🔔" to navRoutes.sideMenu,
+        "🔔" to navRoutes.home,
         "◌" to navRoutes.profile,
     )
     Surface(

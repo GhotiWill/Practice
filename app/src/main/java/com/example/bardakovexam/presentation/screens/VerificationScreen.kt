@@ -41,12 +41,7 @@ fun VerificationScreen(navController: NavController, email: String, viewModel: V
         Spacer(modifier = Modifier.height(28.dp))
         Text("OTP Код", color = AppText, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(18.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            val chars = code.padEnd(6, ' ').take(6)
-            chars.forEachIndexed { index, c ->
-                OtpCell(value = if (c == ' ') "" else c.toString(), isError = state is AppState.Error && index == 5)
-            }
-        }
+        AuthField(label = "", value = code, onValueChange = { if (it.length <= 8) { code = it; if (it.length == 8) viewModel.verify(email, it) } })
         Spacer(modifier = Modifier.height(16.dp))
         if (seconds > 0) {
             Text("00:${seconds.toString().padStart(2, '0')}", color = AppMuted, fontSize = 15.sp, modifier = Modifier.fillMaxWidth())
@@ -54,6 +49,6 @@ fun VerificationScreen(navController: NavController, email: String, viewModel: V
             TextButton(onClick = { viewModel.startTimer() }) { Text("Отправить заново", color = AppMuted, fontSize = 15.sp) }
         }
         Spacer(modifier = Modifier.height(18.dp))
-        AuthField(label = "", value = code, onValueChange = { if (it.length <= 6) { code = it; if (it.length == 6) viewModel.verify(email, it) } })
+
     }
 }
