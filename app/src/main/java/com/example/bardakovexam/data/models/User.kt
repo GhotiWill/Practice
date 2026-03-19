@@ -1,5 +1,7 @@
 package com.example.bardakovexam.data.models
 
+import com.google.gson.annotations.SerializedName
+
 data class User(
     val id: String,
     val email: String,
