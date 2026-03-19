@@ -67,7 +67,7 @@ fun RegisterAccountScreen(navController: NavController, viewModel: RegisterAccou
             value = password,
             onValueChange = { password = it },
             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            trailing = { TextButton(onClick = { showPassword = !showPassword }) { Text(if (showPassword) "🙈" else "👁", color = AppMuted) } }
+            trailing = { PasswordVisibilityIcon(isVisible = showPassword, onClick = { showPassword = !showPassword }) }
         )
         Spacer(modifier = Modifier.height(20.dp))
         PrimaryButton(text = "Зарегистрироваться", onClick = {
