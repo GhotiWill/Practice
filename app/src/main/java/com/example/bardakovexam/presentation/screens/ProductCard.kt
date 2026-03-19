@@ -1,8 +1,8 @@
 package com.example.bardakovexam.presentation.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,22 +15,19 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.bardakovexam.R
 import com.example.bardakovexam.data.models.Product
-import com.example.bardakovexam.presentation.viewModels.ProductCardViewModel
-import kotlinx.coroutines.launch
 
 @Composable
-fun ProductCard(product: Product, viewModel: ProductCardViewModel = hiltViewModel()) {
-    val scope = rememberCoroutineScope()
+fun ProductCard(product: Product, isFavorite: Boolean, onFavoriteToggle: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(24.dp),
@@ -43,10 +40,15 @@ fun ProductCard(product: Product, viewModel: ProductCardViewModel = hiltViewMode
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .background(AppField, CircleShape),
+                        .background(AppField, CircleShape)
+                        .clickable(onClick = onFavoriteToggle),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("♥", color = AppDanger, fontSize = 14.sp)
+                    Image(
+                        painter = painterResource(if (isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_outline),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
                 AsyncImage(
                     model = product.photoUrl(),
@@ -78,19 +80,6 @@ fun ProductCard(product: Product, viewModel: ProductCardViewModel = hiltViewMode
                 fontSize = 15.sp,
                 modifier = Modifier.padding(top = 8.dp)
             )
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomEnd) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(AppBlue, RoundedCornerShape(topStart = 18.dp, bottomEnd = 18.dp))
-                        .clickable {
-                            scope.launch { viewModel.addFavorite(product.id) }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("＋", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Light)
-                }
-            }
         }
     }
 }
