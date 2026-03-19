@@ -213,7 +213,7 @@ fun CategoryChips(selected: String, items: List<String>, onSelect: (String) -> U
 }
 
 @Composable
-fun BarcodePanel(data: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+fun BarcodePanel(data: String, modifier: Modifier = Modifier, barcodeHeight: androidx.compose.ui.unit.Dp = 72.dp, onClick: (() -> Unit)? = null) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -221,7 +221,7 @@ fun BarcodePanel(data: String, modifier: Modifier = Modifier, onClick: (() -> Un
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        BarcodeView(data)
+        BarcodeView(data, height = barcodeHeight)
         Text(
             text = "Открыть",
             color = AppText,
