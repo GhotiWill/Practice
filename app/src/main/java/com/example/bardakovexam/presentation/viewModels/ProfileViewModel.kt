@@ -3,7 +3,7 @@ package com.example.bardakovexam.presentation.viewModels
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bardakovexam.data.models.Profile
+import com.example.bardakovexam.data.models.User
 import com.example.bardakovexam.data.remotes.SessionManager
 import com.example.bardakovexam.data.remotes.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,15 +14,40 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository
 ): ViewModel() {
-    val profile = mutableStateOf(Profile(user_id = SessionManager.userId.orEmpty()))
+    val user = mutableStateOf(User(id = SessionManager.userId.orEmpty(), email = SessionManager.email.orEmpty()))
+    val errorMessage = mutableStateOf<String?>(null)
 
     init {
         viewModelScope.launch {
-            userRepository.loadProfile().onSuccess { if (it != null) profile.value = it }
+            userRepository.loadCurrentUser()
+                .onSuccess { user.value = it }
+                .onFailure { errorMessage.value = it.message }
         }
     }
 
-    fun save() {
-        viewModelScope.launch { userRepository.saveProfile(profile.value) }
+    fun save(onComplete: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            userRepository.saveCurrentUser(user.value)
+                .onSuccess {
+                    errorMessage.value = null
+                    onComplete?.invoke()
+                }
+                .onFailure {
+                    errorMessage.value = it.message
+                }
+        }
+    }
+
+    fun signOut(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            userRepository.signOut()
+                .onSuccess {
+                    errorMessage.value = null
+                    onComplete()
+                }
+                .onFailure {
+                    errorMessage.value = it.message
+                }
+        }
     }
 }

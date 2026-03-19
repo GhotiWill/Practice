@@ -30,14 +30,14 @@ fun LoyaltyCardScreen(navController: NavController, viewModel: LoyaltyCardViewMo
         }
         Spacer(modifier = Modifier.height(48.dp))
         Box(modifier = Modifier.fillMaxWidth().weight(1f).background(Color.White, RoundedCornerShape(24.dp)).padding(24.dp), contentAlignment = Alignment.Center) {
-            BarcodeView(viewModel.userId.ifBlank { "12345678901234567890" })
+            BarcodeView(viewModel.userId.ifBlank { "12345678901234567890" }, height = 620.dp)
         }
     }
 }
 
 @Composable
-fun BarcodeView(data: String) {
-    Canvas(modifier = Modifier.fillMaxWidth().height(620.dp)) {
+fun BarcodeView(data: String, height: androidx.compose.ui.unit.Dp = 620.dp) {
+    Canvas(modifier = Modifier.fillMaxWidth().height(height)) {
         val normalized = if (data.isBlank()) "12345678901234567890" else data
         normalized.forEachIndexed { idx, c ->
             val barWidth = if ((c.code + idx) % 3 == 0) 7f else 4f
