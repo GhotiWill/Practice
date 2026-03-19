@@ -53,7 +53,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
             is AppState.Error -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text((state as AppState.Error).ex.message.orEmpty()) }
             else -> {
                 Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 18.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         Text("Главная", color = AppText, fontSize = 28.sp, fontWeight = FontWeight.Normal)
                     }
                     Spacer(modifier = Modifier.height(22.dp))
