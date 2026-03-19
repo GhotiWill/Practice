@@ -14,7 +14,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository
 ): ViewModel() {
-    val profile = mutableStateOf(Profile(user_id = SessionManager.userId.orEmpty()))
+    val profile = mutableStateOf(Profile(user_id = SessionManager.userId.orEmpty(), email = SessionManager.email))
 
     init {
         viewModelScope.launch {
@@ -22,7 +22,17 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun save() {
-        viewModelScope.launch { userRepository.saveProfile(profile.value) }
+    fun save(onComplete: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            userRepository.saveProfile(profile.value)
+            onComplete?.invoke()
+        }
+    }
+
+    fun signOut(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            userRepository.signOut()
+            onComplete()
+        }
     }
 }
