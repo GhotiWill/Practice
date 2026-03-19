@@ -140,21 +140,32 @@ class UserRepository {
     }
 
     suspend fun updatePassword(newPassword: String): Result<Unit> = withContext(Dispatchers.IO) {
+        updateAccount(password = newPassword)
+    }
+
+    suspend fun updateAccount(email: String? = null, password: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val token = SessionManager.accessToken ?: error("Нет токена")
-            val body = JSONObject().put("password", newPassword).toString().toRequestBody(json)
+            val payload = JSONObject().apply {
+                if (!email.isNullOrBlank()) put("email", email)
+                if (!password.isNullOrBlank()) put("password", password)
+            }
+            if (payload.length() == 0) return@runCatching
             val request = Request.Builder()
                 .url("${supabaseConnectionValues.BASE_URL}/auth/v1/user")
                 .addHeader("apikey", supabaseConnectionValues.API_KEY)
                 .addHeader("Authorization", "Bearer $token")
                 .addHeader("Content-Type", "application/json")
-                .put(body)
+                .put(payload.toString().toRequestBody(json))
                 .build()
             client.newCall(request).execute().use {
                 val raw = it.body?.string().orEmpty()
                 if (!it.isSuccessful) {
                     throw IllegalStateException("HTTP ${it.code}: ${extractSupabaseError(raw)}")
                 }
+            }
+            if (!email.isNullOrBlank()) {
+                SessionManager.email = email
             }
         }
     }
@@ -174,21 +185,40 @@ class UserRepository {
                     throw IllegalStateException("HTTP ${it.code}: ${extractSupabaseError(raw)}")
                 }
                 val listType = object : TypeToken<List<Profile>>() {}.type
-                gson.fromJson<List<Profile>>(raw, listType).firstOrNull()
+                gson.fromJson<List<Profile>>(raw, listType).firstOrNull()?.let {
+                    it.copy(email = it.email?.takeIf(String::isNotBlank) ?: SessionManager.email)
+                } ?: Profile(user_id = userId, email = SessionManager.email)
             }
         }
     }
 
     suspend fun saveProfile(profile: Profile): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val request = Request.Builder()
-                .url("${supabaseConnectionValues.BASE_URL}/rest/v1/profiles?user_id=eq.${profile.user_id}")
+            val sanitizedProfile = profile.copy(
+                name = profile.name?.trim(),
+                email = profile.email?.trim(),
+                password = profile.password?.trim()
+            )
+            updateAccount(email = sanitizedProfile.email, password = sanitizedProfile.password).getOrThrow()
+
+            val requestBuilder = Request.Builder()
                 .addHeader("apikey", supabaseConnectionValues.API_KEY)
                 .addHeader("Authorization", "Bearer ${SessionManager.accessToken ?: supabaseConnectionValues.API_KEY}")
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Prefer", "return=representation,resolution=merge-duplicates")
-                .patch(gson.toJson(profile).toRequestBody(json))
-                .build()
+                .addHeader("Prefer", "return=representation")
+
+            val request = if (sanitizedProfile.id != null) {
+                requestBuilder
+                    .url("${supabaseConnectionValues.BASE_URL}/rest/v1/profiles?id=eq.${sanitizedProfile.id}")
+                    .patch(gson.toJson(sanitizedProfile).toRequestBody(json))
+                    .build()
+            } else {
+                requestBuilder
+                    .url("${supabaseConnectionValues.BASE_URL}/rest/v1/profiles")
+                    .post(gson.toJson(sanitizedProfile).toRequestBody(json))
+                    .build()
+            }
+
             client.newCall(request).execute().use {
                 val raw = it.body?.string().orEmpty()
                 if (!it.isSuccessful) {
