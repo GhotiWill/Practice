@@ -50,6 +50,7 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
     var showPassword by remember { mutableStateOf(false) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val profile = viewModel.profile.value
+    val errorMessage = viewModel.errorMessage.value
     val displayName = profile.name?.takeIf { it.isNotBlank() } ?: "User"
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -108,6 +109,10 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
                 }
             )
             Spacer(modifier = Modifier.height(22.dp))
+            if (!errorMessage.isNullOrBlank()) {
+                Text(errorMessage, color = AppDanger, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
             if (editMode) {
                 PrimaryButton(text = "Сохранить", onClick = { viewModel.save { editMode = false } })
                 Spacer(modifier = Modifier.height(12.dp))

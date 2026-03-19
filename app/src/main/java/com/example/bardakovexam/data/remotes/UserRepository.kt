@@ -186,7 +186,7 @@ class UserRepository {
                 }
                 val listType = object : TypeToken<List<Profile>>() {}.type
                 gson.fromJson<List<Profile>>(raw, listType).firstOrNull()?.let {
-                    it.copy(email = it.email ?: SessionManager.email)
+                    it.copy(email = it.email?.takeIf(String::isNotBlank) ?: SessionManager.email)
                 } ?: Profile(user_id = userId, email = SessionManager.email)
             }
         }
@@ -194,16 +194,31 @@ class UserRepository {
 
     suspend fun saveProfile(profile: Profile): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val sanitizedProfile = profile.copy(email = profile.email?.trim())
+            val sanitizedProfile = profile.copy(
+                name = profile.name?.trim(),
+                email = profile.email?.trim(),
+                password = profile.password?.trim()
+            )
             updateAccount(email = sanitizedProfile.email, password = sanitizedProfile.password).getOrThrow()
-            val request = Request.Builder()
-                .url("${supabaseConnectionValues.BASE_URL}/rest/v1/profiles?on_conflict=user_id")
+
+            val requestBuilder = Request.Builder()
                 .addHeader("apikey", supabaseConnectionValues.API_KEY)
                 .addHeader("Authorization", "Bearer ${SessionManager.accessToken ?: supabaseConnectionValues.API_KEY}")
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Prefer", "return=representation,resolution=merge-duplicates")
-                .post(gson.toJson(sanitizedProfile).toRequestBody(json))
-                .build()
+                .addHeader("Prefer", "return=representation")
+
+            val request = if (sanitizedProfile.id != null) {
+                requestBuilder
+                    .url("${supabaseConnectionValues.BASE_URL}/rest/v1/profiles?id=eq.${sanitizedProfile.id}")
+                    .patch(gson.toJson(sanitizedProfile).toRequestBody(json))
+                    .build()
+            } else {
+                requestBuilder
+                    .url("${supabaseConnectionValues.BASE_URL}/rest/v1/profiles")
+                    .post(gson.toJson(sanitizedProfile).toRequestBody(json))
+                    .build()
+            }
+
             client.newCall(request).execute().use {
                 val raw = it.body?.string().orEmpty()
                 if (!it.isSuccessful) {
