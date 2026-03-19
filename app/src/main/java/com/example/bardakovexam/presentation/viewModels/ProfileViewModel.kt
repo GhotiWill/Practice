@@ -14,15 +14,40 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository
 ): ViewModel() {
-    val profile = mutableStateOf(Profile(user_id = SessionManager.userId.orEmpty()))
+    val profile = mutableStateOf(Profile(user_id = SessionManager.userId.orEmpty(), email = SessionManager.email))
+    val errorMessage = mutableStateOf<String?>(null)
 
     init {
         viewModelScope.launch {
-            userRepository.loadProfile().onSuccess { if (it != null) profile.value = it }
+            userRepository.loadProfile()
+                .onSuccess { if (it != null) profile.value = it }
+                .onFailure { errorMessage.value = it.message }
         }
     }
 
-    fun save() {
-        viewModelScope.launch { userRepository.saveProfile(profile.value) }
+    fun save(onComplete: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            userRepository.saveProfile(profile.value)
+                .onSuccess {
+                    errorMessage.value = null
+                    onComplete?.invoke()
+                }
+                .onFailure {
+                    errorMessage.value = it.message
+                }
+        }
+    }
+
+    fun signOut(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            userRepository.signOut()
+                .onSuccess {
+                    errorMessage.value = null
+                    onComplete()
+                }
+                .onFailure {
+                    errorMessage.value = it.message
+                }
+        }
     }
 }
