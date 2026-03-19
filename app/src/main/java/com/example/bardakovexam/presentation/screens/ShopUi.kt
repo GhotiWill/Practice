@@ -1,5 +1,6 @@
 package com.example.bardakovexam.presentation.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,13 +27,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.bardakovexam.R
 import com.example.bardakovexam.presentation.navigation.navRoutes
 
 val AppBlue = Color(0xFF4CB1E8)
@@ -142,14 +146,27 @@ fun AuthField(
     )
 }
 
+private data class BottomNavItem(val iconRes: Int, val route: String)
+
+@Composable
+fun PasswordVisibilityIcon(isVisible: Boolean, onClick: () -> Unit) {
+    Box(modifier = Modifier.clickable(onClick = onClick).padding(4.dp)) {
+        Image(
+            painter = painterResource(if (isVisible) R.drawable.ic_password_visible else R.drawable.ic_password_hidden),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
 @Composable
 fun BottomNavBar(currentRoute: String, navController: NavController) {
     val items = listOf(
-        "⌂" to navRoutes.home,
-        "♡" to navRoutes.favorite,
-        "👜" to navRoutes.catalog,
-        "🔔" to navRoutes.home,
-        "◌" to navRoutes.profile,
+        BottomNavItem(R.drawable.ic_nav_home, navRoutes.home),
+        BottomNavItem(R.drawable.ic_nav_favorite, navRoutes.favorite),
+        BottomNavItem(R.drawable.ic_nav_catalog, navRoutes.catalog),
+        BottomNavItem(R.drawable.ic_nav_notifications, navRoutes.home),
+        BottomNavItem(R.drawable.ic_nav_profile, navRoutes.profile),
     )
     Surface(
         color = Color.White,
@@ -166,24 +183,26 @@ fun BottomNavBar(currentRoute: String, navController: NavController) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items.forEachIndexed { index, (icon, route) ->
-                val selected = currentRoute == route
+            items.forEachIndexed { index, item ->
+                val selected = currentRoute == item.route
+                val tint = if (selected) AppBlue else AppMuted
                 if (index == 2) {
                     Box(
                         modifier = Modifier
                             .size(68.dp)
                             .background(AppBlue, CircleShape)
-                            .clickable { navController.navigate(route) },
+                            .clickable { navController.navigate(item.route) },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(icon, color = Color.White, fontSize = 24.sp)
+                        Image(painter = painterResource(item.iconRes), contentDescription = null, modifier = Modifier.size(28.dp))
                     }
                 } else {
-                    Text(
-                        text = icon,
-                        color = if (selected) AppBlue else AppMuted,
-                        fontSize = 24.sp,
-                        modifier = Modifier.clickable { navController.navigate(route) }
+                    Image(
+                        painter = painterResource(item.iconRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp).clickable { navController.navigate(item.route) },
+                        alpha = if (selected) 1f else 0.55f,
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(tint)
                     )
                 }
             }
@@ -213,7 +232,7 @@ fun CategoryChips(selected: String, items: List<String>, onSelect: (String) -> U
 }
 
 @Composable
-fun BarcodePanel(data: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+fun BarcodePanel(data: String, modifier: Modifier = Modifier, barcodeHeight: Dp = 72.dp, onClick: (() -> Unit)? = null) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -221,7 +240,7 @@ fun BarcodePanel(data: String, modifier: Modifier = Modifier, onClick: (() -> Un
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        BarcodeView(data)
+        BarcodeView(data, height = barcodeHeight)
         Text(
             text = "Открыть",
             color = AppText,
