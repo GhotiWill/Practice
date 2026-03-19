@@ -1,6 +1,7 @@
 package com.example.bardakovexam.data.remotes
 
 import com.example.bardakovexam.data.models.ActionItem
+import com.example.bardakovexam.data.models.Category
 import com.example.bardakovexam.data.models.Product
 import com.example.bardakovexam.domain.utils.supabaseConnectionValues
 import com.google.gson.Gson
@@ -32,6 +33,21 @@ class ProductRepository {
         }
     }
 
+    suspend fun loadCategories(): Result<List<Category>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val request = Request.Builder()
+                .url("${supabaseConnectionValues.BASE_URL}/rest/v1/categories?select=*&order=title.asc")
+                .addHeader("apikey", supabaseConnectionValues.API_KEY)
+                .get()
+                .build()
+            client.newCall(request).execute().use {
+                val resp = it.body?.string().orEmpty()
+                if (!it.isSuccessful) error(resp)
+                gson.fromJson(resp, object : TypeToken<List<Category>>() {}.type)
+            }
+        }
+    }
+
     suspend fun loadActions(): Result<List<ActionItem>> = withContext(Dispatchers.IO) {
         runCatching {
             val request = Request.Builder()
@@ -47,19 +63,25 @@ class ProductRepository {
         }
     }
 
-    suspend fun loadFavorites(): Result<List<Product>> = withContext(Dispatchers.IO) {
+    suspend fun loadFavoriteIds(): Result<Set<String>> = withContext(Dispatchers.IO) {
         runCatching {
-            val userId = SessionManager.userId ?: return@runCatching emptyList()
+            val userId = SessionManager.userId ?: return@runCatching emptySet()
             val favReq = Request.Builder()
                 .url("${supabaseConnectionValues.BASE_URL}/rest/v1/favourite?user_id=eq.$userId&select=product_id")
                 .addHeader("apikey", supabaseConnectionValues.API_KEY)
                 .addHeader("Authorization", "Bearer ${SessionManager.accessToken ?: supabaseConnectionValues.API_KEY}")
                 .build()
-            val ids = client.newCall(favReq).execute().use {
+            client.newCall(favReq).execute().use {
                 val resp = it.body?.string().orEmpty()
                 if (!it.isSuccessful) error(resp)
-                Regex("\"product_id\":\"([\\w-]+)\"").findAll(resp).map { m -> m.groupValues[1] }.toList()
+                Regex("\\\"product_id\\\":\\\"([\\w-]+)\\\"").findAll(resp).map { m -> m.groupValues[1] }.toSet()
             }
+        }
+    }
+
+    suspend fun loadFavorites(): Result<List<Product>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val ids = loadFavoriteIds().getOrThrow().toList()
             if (ids.isEmpty()) return@runCatching emptyList()
             val inClause = ids.joinToString(",") { "\"$it\"" }
             val req = Request.Builder()
@@ -87,6 +109,31 @@ class ProductRepository {
                 .post(body)
                 .build()
             client.newCall(req).execute().use { if (!it.isSuccessful) error(it.body?.string().orEmpty()) }
+        }
+    }
+
+    suspend fun removeFavorite(productId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val userId = SessionManager.userId ?: error("Не авторизован")
+            val req = Request.Builder()
+                .url("${supabaseConnectionValues.BASE_URL}/rest/v1/favourite?user_id=eq.$userId&product_id=eq.$productId")
+                .addHeader("apikey", supabaseConnectionValues.API_KEY)
+                .addHeader("Authorization", "Bearer ${SessionManager.accessToken ?: supabaseConnectionValues.API_KEY}")
+                .delete()
+                .build()
+            client.newCall(req).execute().use { if (!it.isSuccessful) error(it.body?.string().orEmpty()) }
+        }
+    }
+
+    suspend fun toggleFavorite(productId: String, isFavorite: Boolean): Result<Boolean> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (isFavorite) {
+                removeFavorite(productId).getOrThrow()
+                false
+            } else {
+                addFavorite(productId).getOrThrow()
+                true
+            }
         }
     }
 }

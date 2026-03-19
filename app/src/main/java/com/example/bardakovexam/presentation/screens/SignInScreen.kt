@@ -28,7 +28,6 @@ import androidx.navigation.NavController
 import com.example.bardakovexam.domain.states.AppState
 import com.example.bardakovexam.presentation.navigation.navRoutes
 import com.example.bardakovexam.presentation.viewModels.SignInViewModel
-import androidx.compose.runtime.collectAsState
 
 @Composable
 fun SignInScreen(navController: NavController, viewModel: SignInViewModel = hiltViewModel()) {
@@ -55,7 +54,7 @@ fun SignInScreen(navController: NavController, viewModel: SignInViewModel = hilt
             value = password,
             onValueChange = { password = it },
             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            trailing = { TextButton(onClick = { showPassword = !showPassword }) { Text(if (showPassword) "🙈" else "👁", color = AppMuted) } }
+            trailing = { PasswordVisibilityIcon(isVisible = showPassword, onClick = { showPassword = !showPassword }) }
         )
         TextButton(onClick = { navController.navigate(navRoutes.forgotPassword) }, modifier = Modifier.align(androidx.compose.ui.Alignment.End)) {
             Text("Восстановить", color = AppMuted, fontSize = 15.sp)
