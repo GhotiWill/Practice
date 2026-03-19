@@ -69,7 +69,12 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Профиль", color = AppText, fontSize = 22.sp, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-
+                Box(
+                    modifier = Modifier.size(36.dp).background(AppBlue, CircleShape).clickable { editMode = !editMode },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("✎", color = Color.White, fontSize = 16.sp, modifier = Modifier.align(Alignment.Center))
+                }
             }
             Spacer(modifier = Modifier.height(28.dp))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -103,9 +108,7 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
                 onValueChange = { if (editMode) viewModel.user.value = user.copy(password = it) },
                 visualTransformation = if (showPassword || !editMode) VisualTransformation.None else PasswordVisualTransformation(),
                 trailing = {
-                    TextButton(onClick = { if (editMode) showPassword = !showPassword }) {
-                        Text(if (showPassword) "🙈" else "👁", color = AppMuted)
-                    }
+                    PasswordVisibilityIcon(isVisible = showPassword, onClick = { if (editMode) showPassword = !showPassword })
                 }
             )
             Spacer(modifier = Modifier.height(22.dp))
