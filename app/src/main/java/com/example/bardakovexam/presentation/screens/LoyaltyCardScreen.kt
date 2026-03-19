@@ -14,7 +14,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,24 +33,40 @@ fun LoyaltyCardScreen(navController: NavController, viewModel: LoyaltyCardViewMo
         }
         Spacer(modifier = Modifier.height(48.dp))
         Box(modifier = Modifier.fillMaxWidth().weight(1f).background(Color.White, RoundedCornerShape(24.dp)).padding(24.dp), contentAlignment = Alignment.Center) {
-            BarcodeView(viewModel.userId.ifBlank { "12345678901234567890" })
+            BarcodeView(viewModel.userId.ifBlank { "12345678901234567890" }, height = 620.dp, horizontalLines = true)
         }
     }
 }
 
 @Composable
-fun BarcodeView(data: String) {
-    Canvas(modifier = Modifier.fillMaxWidth().height(620.dp)) {
+fun BarcodeView(data: String, height: Dp = 620.dp, horizontalLines: Boolean = false) {
+    Canvas(modifier = Modifier.fillMaxWidth().height(height)) {
         val normalized = if (data.isBlank()) "12345678901234567890" else data
-        normalized.forEachIndexed { idx, c ->
-            val barWidth = if ((c.code + idx) % 3 == 0) 7f else 4f
-            val x = idx * (size.width / (normalized.length + 2))
-            val barHeight = if ((c.code + idx) % 5 == 0) size.height * 0.55f else size.height * 0.9f
-            drawRect(
-                color = Color.Black,
-                topLeft = androidx.compose.ui.geometry.Offset(x, (size.height - barHeight) / 2f),
-                size = androidx.compose.ui.geometry.Size(barWidth, barHeight)
-            )
+        val mainColor = Color.Black
+        if (horizontalLines) {
+            val step = size.height / (normalized.length + 2)
+            val lineWidth = size.width * 0.9f
+            normalized.forEachIndexed { idx, c ->
+                val thickness = if ((c.code + idx) % 3 == 0) 7f else 4f
+                val y = (idx + 1) * step
+                drawRect(
+                    color = mainColor,
+                    topLeft = Offset((size.width - lineWidth) / 2f, y),
+                    size = Size(lineWidth, thickness)
+                )
+            }
+        } else {
+            val step = size.width / (normalized.length + 2)
+            val lineHeight = size.height * 0.9f
+            normalized.forEachIndexed { idx, c ->
+                val barWidth = if ((c.code + idx) % 3 == 0) 7f else 4f
+                val x = (idx + 1) * step
+                drawRect(
+                    color = mainColor,
+                    topLeft = Offset(x, (size.height - lineHeight) / 2f),
+                    size = Size(barWidth, lineHeight)
+                )
+            }
         }
     }
 }

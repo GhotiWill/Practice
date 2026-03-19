@@ -1,7 +1,6 @@
 package com.example.bardakovexam.presentation.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,15 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.bardakovexam.data.models.ActionItem
 import com.example.bardakovexam.domain.states.AppState
 import com.example.bardakovexam.presentation.navigation.navRoutes
 import com.example.bardakovexam.presentation.viewModels.HomeViewModel
@@ -46,7 +42,10 @@ import com.example.bardakovexam.presentation.viewModels.HomeViewModel
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
     val products = viewModel.products.value
-    val selectedCategory = remember { mutableStateOf("Outdoor") }
+    val categories = viewModel.categories.value
+    val favoriteIds = viewModel.favoriteIds.value
+    val selectedCategory = remember(categories) { mutableStateOf("Все") }
+    val filteredProducts = products.filter { selectedCategory.value == "Все" || categories.firstOrNull { category -> category.id == it.categoryId }?.title == selectedCategory.value }
 
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         when (state) {
@@ -70,18 +69,24 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                     Spacer(modifier = Modifier.height(26.dp))
                     Text("Категории", color = AppText, fontSize = 20.sp)
                     Spacer(modifier = Modifier.height(16.dp))
-                    CategoryChips(selectedCategory.value, listOf("Все", "Outdoor", "Tennis")) { selectedCategory.value = it }
+                    CategoryChips(selectedCategory.value, listOf("Все") + categories.map { it.title }) { selectedCategory.value = it }
                     Spacer(modifier = Modifier.height(24.dp))
                     SectionHeader("Популярное")
                     Spacer(modifier = Modifier.height(14.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(products.take(2)) { product -> ProductCard(product = product) }
+                        items(filteredProducts.take(2)) { product ->
+                            ProductCard(
+                                product = product,
+                                isFavorite = favoriteIds.contains(product.id),
+                                onFavoriteToggle = { viewModel.toggleFavorite(product.id) }
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(22.dp))
                     SectionHeader("Акции")
                     Spacer(modifier = Modifier.height(14.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(viewModel.actions.value.ifEmpty { listOf(com.example.bardakovexam.data.models.ActionItem("stub", null)) }) { action ->
+                        items(viewModel.actions.value.ifEmpty { listOf(ActionItem("stub", null)) }) { action ->
                             Surface(color = Color.White, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillParentMaxWidth()) {
                                 if (action.photo != null) {
                                     AsyncImage(model = action.photo, contentDescription = null, modifier = Modifier.fillMaxWidth().height(116.dp).clip(RoundedCornerShape(24.dp)))
