@@ -33,7 +33,7 @@ fun ProductCard(product: Product, isFavorite: Boolean, onFavoriteToggle: () -> U
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier
             .padding(6.dp)
-            .size(width = 170.dp, height = 230.dp)
+            .size(width = 170.dp, height = 250.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -61,7 +61,7 @@ fun ProductCard(product: Product, isFavorite: Boolean, onFavoriteToggle: () -> U
                 )
             }
             Text(
-                text = if (product.isBestSeller) "BEST SELLER" else "NEW",
+                text = if (product.isBestSeller) "BEST SELLER" else "",
                 color = AppBlue,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(top = 10.dp)
