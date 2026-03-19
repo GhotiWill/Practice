@@ -158,6 +158,7 @@ class UserRepository {
                     }
                 }
             }
+            if (!email.isNullOrBlank()) SessionManager.email = email
         }
     }
 
