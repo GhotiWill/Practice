@@ -136,6 +136,10 @@ class UserRepository {
     }
 
     suspend fun updatePassword(newPassword: String): Result<Unit> = withContext(Dispatchers.IO) {
+        updateAccount(password = newPassword)
+    }
+
+    suspend fun updateAccount(email: String? = null, password: String? = null, name: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val token = SessionManager.accessToken ?: error("Нет токена")
             val request = Request.Builder()
@@ -151,6 +155,7 @@ class UserRepository {
                     throw IllegalStateException("HTTP ${it.code}: ${extractSupabaseError(raw)}")
                 }
             }
+            if (!email.isNullOrBlank()) SessionManager.email = email
         }
     }
 

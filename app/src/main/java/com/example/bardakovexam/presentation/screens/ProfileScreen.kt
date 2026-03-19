@@ -45,6 +45,7 @@ import com.example.bardakovexam.presentation.viewModels.ProfileViewModel
 fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hiltViewModel()) {
     var editMode by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
+    var showPassword by remember { mutableStateOf(false) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val user = viewModel.user.value
     val errorMessage = viewModel.errorMessage.value
