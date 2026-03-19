@@ -135,24 +135,26 @@ class UserRepository {
         }
     }
 
-    suspend fun updatePassword(newPassword: String): Result<Unit> = withContext(Dispatchers.IO) {
-        updateAccount(password = newPassword)
-    }
-
-    suspend fun updateAccount(email: String? = null, password: String? = null, name: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val token = SessionManager.accessToken ?: error("Нет токена")
-            val request = Request.Builder()
-                .url("${supabaseConnectionValues.BASE_URL}/auth/v1/user")
-                .addHeader("apikey", supabaseConnectionValues.API_KEY)
-                .addHeader("Authorization", "Bearer $token")
-                .addHeader("Content-Type", "application/json")
-                .put(JSONObject().put("password", newPassword).toString().toRequestBody(json))
-                .build()
-            client.newCall(request).execute().use {
-                val raw = it.body?.string().orEmpty()
-                if (!it.isSuccessful) {
-                    throw IllegalStateException("HTTP ${it.code}: ${extractSupabaseError(raw)}")
+    suspend fun updatePassword(newPassword: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                val token = SessionManager.accessToken ?: error("Нет токена")
+                val passwordBody = JSONObject()
+                    .put("password", newPassword)
+                    .toString()
+                    .toRequestBody(json)
+                val request = Request.Builder()
+                    .url("${supabaseConnectionValues.BASE_URL}/auth/v1/user")
+                    .addHeader("apikey", supabaseConnectionValues.API_KEY)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .put(passwordBody)
+                    .build()
+                client.newCall(request).execute().use { response ->
+                    val raw = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        throw IllegalStateException("HTTP ${response.code}: ${extractSupabaseError(raw)}")
+                    }
                 }
             }
             if (!email.isNullOrBlank()) SessionManager.email = email
