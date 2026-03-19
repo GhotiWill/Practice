@@ -32,8 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +49,7 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val user = viewModel.user.value
     val errorMessage = viewModel.errorMessage.value
-    val displayName = user.name?.takeIf { it.isNotBlank() } ?: "User"
+    val displayName = listOf(user.firstname, user.lastname).filter { !it.isNullOrBlank() }.joinToString(" ").ifBlank { "User" }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) viewModel.user.value = user.copy(photo = uri.toString())
@@ -98,19 +96,13 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
                 onClick = { navController.navigate(navRoutes.loyalty) }
             )
             Spacer(modifier = Modifier.height(24.dp))
-            AuthField(label = "Имя", value = user.name.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(name = it) })
+            AuthField(label = "Имя", value = user.firstname.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(firstname = it) })
             Spacer(modifier = Modifier.height(16.dp))
-            AuthField(label = "Email", value = user.email.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(email = it) })
+            AuthField(label = "Фамилия", value = user.lastname.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(lastname = it) })
             Spacer(modifier = Modifier.height(16.dp))
-            AuthField(
-                label = "Пароль",
-                value = user.password.orEmpty(),
-                onValueChange = { if (editMode) viewModel.user.value = user.copy(password = it) },
-                visualTransformation = if (showPassword || !editMode) VisualTransformation.None else PasswordVisualTransformation(),
-                trailing = {
-                    PasswordVisibilityIcon(isVisible = showPassword, onClick = { if (editMode) showPassword = !showPassword })
-                }
-            )
+            AuthField(label = "Адрес", value = user.address.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(address = it) })
+            Spacer(modifier = Modifier.height(16.dp))
+            AuthField(label = "Телефон", value = user.phone.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(phone = it) })
             Spacer(modifier = Modifier.height(22.dp))
             if (!errorMessage.isNullOrBlank()) {
                 Text(errorMessage, color = AppDanger, fontSize = 14.sp)

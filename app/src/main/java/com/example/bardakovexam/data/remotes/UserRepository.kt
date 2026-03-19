@@ -74,12 +74,7 @@ class UserRepository {
                 SessionManager.accessToken = obj.getString("access_token")
                 SessionManager.userId = user.getString("id")
                 SessionManager.email = user.optString("email")
-                User(
-                    id = user.getString("id"),
-                    email = user.optString("email"),
-                    name = user.optJSONObject("user_metadata")?.optString("name")?.takeIf { it.isNotBlank() },
-                    password = password
-                )
+                User(id = user.getString("id"), email = user.optString("email"))
             }
         }
     }
@@ -147,18 +142,12 @@ class UserRepository {
     suspend fun updateAccount(email: String? = null, password: String? = null, name: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val token = SessionManager.accessToken ?: error("Нет токена")
-            val payload = JSONObject().apply {
-                if (!email.isNullOrBlank()) put("email", email)
-                if (!password.isNullOrBlank()) put("password", password)
-                if (!name.isNullOrBlank()) put("data", JSONObject().put("name", name))
-            }
-            if (payload.length() == 0) return@runCatching
             val request = Request.Builder()
                 .url("${supabaseConnectionValues.BASE_URL}/auth/v1/user")
                 .addHeader("apikey", supabaseConnectionValues.API_KEY)
                 .addHeader("Authorization", "Bearer $token")
                 .addHeader("Content-Type", "application/json")
-                .put(payload.toString().toRequestBody(json))
+                .put(JSONObject().put("password", newPassword).toString().toRequestBody(json))
                 .build()
             client.newCall(request).execute().use {
                 val raw = it.body?.string().orEmpty()
@@ -170,35 +159,15 @@ class UserRepository {
         }
     }
 
-
-    private fun loadAuthUser(): User? {
-        val token = SessionManager.accessToken ?: return null
-        val request = Request.Builder()
-            .url("${supabaseConnectionValues.BASE_URL}/auth/v1/user")
-            .addHeader("apikey", supabaseConnectionValues.API_KEY)
-            .addHeader("Authorization", "Bearer $token")
-            .get()
-            .build()
-        client.newCall(request).execute().use {
-            val raw = it.body?.string().orEmpty()
-            if (!it.isSuccessful) return null
-            val obj = JSONObject(raw)
-            return User(
-                id = obj.optString("id").ifBlank { SessionManager.userId.orEmpty() },
-                email = obj.optString("email").ifBlank { SessionManager.email.orEmpty() },
-                name = obj.optJSONObject("user_metadata")?.optString("name")?.takeIf { it.isNotBlank() }
-            )
-        }
-    }
-
     private fun userFromProfileJson(obj: JSONObject, fallbackUserId: String): User {
-        val authUser = loadAuthUser()
         return User(
             id = fallbackUserId,
-            email = obj.optString("address").takeIf { it.isNotBlank() } ?: authUser?.email.orEmpty().ifBlank { SessionManager.email.orEmpty() },
+            email = SessionManager.email.orEmpty(),
             profileId = obj.optString("id").takeIf { it.isNotBlank() },
-            name = obj.optString("firstname").takeIf { it.isNotBlank() } ?: authUser?.name,
-            password = obj.optString("phone").takeIf { it.isNotBlank() },
+            firstname = obj.optString("firstname").takeIf { it.isNotBlank() },
+            lastname = obj.optString("lastname").takeIf { it.isNotBlank() },
+            address = obj.optString("address").takeIf { it.isNotBlank() },
+            phone = obj.optString("phone").takeIf { it.isNotBlank() },
             photo = obj.optString("photo").takeIf { it.isNotBlank() }
         )
     }
@@ -218,7 +187,7 @@ class UserRepository {
                     throw IllegalStateException("HTTP ${it.code}: ${extractSupabaseError(raw)}")
                 }
                 val profile = runCatching { JSONArray(raw).optJSONObject(0) }.getOrNull()
-                profile?.let { userFromProfileJson(it, userId) } ?: (loadAuthUser() ?: User(id = userId, email = SessionManager.email.orEmpty()))
+                profile?.let { userFromProfileJson(it, userId) } ?: User(id = userId, email = SessionManager.email.orEmpty())
             }
         }
     }
@@ -226,21 +195,17 @@ class UserRepository {
     suspend fun saveCurrentUser(user: User): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val sanitizedUser = user.copy(
-                name = user.name?.trim(),
-                email = user.email.trim(),
-                password = user.password?.trim()
+                firstname = user.firstname?.trim(),
+                lastname = user.lastname?.trim(),
+                address = user.address?.trim(),
+                phone = user.phone?.trim()
             )
-            updateAccount(
-                email = sanitizedUser.email,
-                password = sanitizedUser.password,
-                name = sanitizedUser.name
-            ).getOrThrow()
-
             val payload = JSONObject().apply {
                 put("user_id", sanitizedUser.id)
-                put("firstname", sanitizedUser.name ?: JSONObject.NULL)
-                put("address", sanitizedUser.email)
-                put("phone", sanitizedUser.password ?: JSONObject.NULL)
+                put("firstname", sanitizedUser.firstname ?: JSONObject.NULL)
+                put("lastname", sanitizedUser.lastname ?: JSONObject.NULL)
+                put("address", sanitizedUser.address ?: JSONObject.NULL)
+                put("phone", sanitizedUser.phone ?: JSONObject.NULL)
                 put("photo", sanitizedUser.photo ?: JSONObject.NULL)
             }
 
