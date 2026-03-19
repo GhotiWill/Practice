@@ -136,13 +136,14 @@ class UserRepository {
     }
 
     suspend fun updatePassword(newPassword: String): Result<Unit> {
+        val token = SessionManager.accessToken ?: return Result.failure(IllegalStateException("Нет токена"))
+        val passwordBody = JSONObject()
+            .put("password", newPassword)
+            .toString()
+            .toRequestBody(json)
+
         return withContext(Dispatchers.IO) {
             runCatching {
-                val token = SessionManager.accessToken ?: error("Нет токена")
-                val passwordBody = JSONObject()
-                    .put("password", newPassword)
-                    .toString()
-                    .toRequestBody(json)
                 val request = Request.Builder()
                     .url("${supabaseConnectionValues.BASE_URL}/auth/v1/user")
                     .addHeader("apikey", supabaseConnectionValues.API_KEY)
