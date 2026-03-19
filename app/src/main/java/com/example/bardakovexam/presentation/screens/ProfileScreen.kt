@@ -69,12 +69,7 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Профиль", color = AppText, fontSize = 22.sp, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                Box(
-                    modifier = Modifier.size(36.dp).background(AppBlue, CircleShape).clickable { editMode = !editMode },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("✎", color = Color.White, fontSize = 16.sp, modifier = Modifier.align(Alignment.Center))
-                }
+
             }
             Spacer(modifier = Modifier.height(28.dp))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
