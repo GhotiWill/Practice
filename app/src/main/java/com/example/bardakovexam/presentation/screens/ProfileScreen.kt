@@ -1,6 +1,8 @@
 package com.example.bardakovexam.presentation.screens
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -32,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,22 +43,47 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.bardakovexam.presentation.navigation.navRoutes
 import com.example.bardakovexam.presentation.viewModels.ProfileViewModel
+import java.io.ByteArrayOutputStream
+
+private fun bitmapToBase64(bitmap: Bitmap): String {
+    val output = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, output)
+    return Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
+}
+
+private fun decodeBase64Bitmap(value: String?): Bitmap? {
+    if (value.isNullOrBlank()) return null
+    return runCatching {
+        val bytes = Base64.decode(value, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }.getOrNull()
+}
 
 @Composable
 fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hiltViewModel()) {
+    val context = LocalContext.current
     var editMode by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
-    var showPassword by remember { mutableStateOf(false) }
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val user = viewModel.user.value
     val errorMessage = viewModel.errorMessage.value
     val displayName = listOf(user.firstname, user.lastname).filter { !it.isNullOrBlank() }.joinToString(" ").ifBlank { "User" }
+    val storedPhotoBitmap = remember(user.photo) { decodeBase64Bitmap(user.photo) }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) viewModel.user.value = user.copy(photo = uri.toString())
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)
+                }
+            }.getOrNull()?.let { selectedBitmap ->
+                viewModel.user.value = user.copy(photo = bitmapToBase64(selectedBitmap))
+            }
+        }
     }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
-        bitmap = bmp
+        if (bmp != null) {
+            viewModel.user.value = user.copy(photo = bitmapToBase64(bmp))
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
@@ -77,7 +105,7 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
             Spacer(modifier = Modifier.height(28.dp))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 when {
-                    bitmap != null -> Image(bitmap = bitmap!!.asImageBitmap(), contentDescription = null, modifier = Modifier.size(120.dp).clip(CircleShape))
+                    storedPhotoBitmap != null -> Image(bitmap = storedPhotoBitmap.asImageBitmap(), contentDescription = null, modifier = Modifier.size(120.dp).clip(CircleShape))
                     !user.photo.isNullOrBlank() -> AsyncImage(model = user.photo, contentDescription = null, modifier = Modifier.size(120.dp).clip(CircleShape))
                     else -> Box(modifier = Modifier.size(120.dp).background(AppBlue, CircleShape), contentAlignment = Alignment.Center) {
                         Text(displayName.take(1).uppercase(), color = Color.White, fontSize = 36.sp)
