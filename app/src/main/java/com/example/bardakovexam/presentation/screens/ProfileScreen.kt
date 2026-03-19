@@ -49,12 +49,12 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
     var showDialog by remember { mutableStateOf(false) }
     var showPassword by remember { mutableStateOf(false) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val profile = viewModel.profile.value
+    val user = viewModel.user.value
     val errorMessage = viewModel.errorMessage.value
-    val displayName = profile.name?.takeIf { it.isNotBlank() } ?: "User"
+    val displayName = user.name?.takeIf { it.isNotBlank() } ?: "User"
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) viewModel.profile.value = profile.copy(photo = uri.toString())
+        if (uri != null) viewModel.user.value = user.copy(photo = uri.toString())
     }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
         bitmap = bmp
@@ -75,7 +75,7 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 when {
                     bitmap != null -> Image(bitmap = bitmap!!.asImageBitmap(), contentDescription = null, modifier = Modifier.size(120.dp).clip(CircleShape))
-                    !profile.photo.isNullOrBlank() -> AsyncImage(model = profile.photo, contentDescription = null, modifier = Modifier.size(120.dp).clip(CircleShape))
+                    !user.photo.isNullOrBlank() -> AsyncImage(model = user.photo, contentDescription = null, modifier = Modifier.size(120.dp).clip(CircleShape))
                     else -> Box(modifier = Modifier.size(120.dp).background(AppBlue, CircleShape), contentAlignment = Alignment.Center) {
                         Text(displayName.take(1).uppercase(), color = Color.White, fontSize = 36.sp)
                     }
@@ -88,19 +88,19 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = hi
             }
             Spacer(modifier = Modifier.height(16.dp))
             BarcodePanel(
-                data = profile.user_id.ifBlank { "1234567890" },
+                data = user.id.ifBlank { "1234567890" },
                 barcodeHeight = 52.dp,
                 onClick = { navController.navigate(navRoutes.loyalty) }
             )
             Spacer(modifier = Modifier.height(24.dp))
-            AuthField(label = "Имя", value = profile.name.orEmpty(), onValueChange = { if (editMode) viewModel.profile.value = profile.copy(name = it) })
+            AuthField(label = "Имя", value = user.name.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(name = it) })
             Spacer(modifier = Modifier.height(16.dp))
-            AuthField(label = "Email", value = profile.email.orEmpty(), onValueChange = { if (editMode) viewModel.profile.value = profile.copy(email = it) })
+            AuthField(label = "Email", value = user.email.orEmpty(), onValueChange = { if (editMode) viewModel.user.value = user.copy(email = it) })
             Spacer(modifier = Modifier.height(16.dp))
             AuthField(
                 label = "Пароль",
-                value = profile.password.orEmpty(),
-                onValueChange = { if (editMode) viewModel.profile.value = profile.copy(password = it) },
+                value = user.password.orEmpty(),
+                onValueChange = { if (editMode) viewModel.user.value = user.copy(password = it) },
                 visualTransformation = if (showPassword || !editMode) VisualTransformation.None else PasswordVisualTransformation(),
                 trailing = {
                     TextButton(onClick = { if (editMode) showPassword = !showPassword }) {
