@@ -53,7 +53,7 @@ fun CreateNewPasswordScreen(navController: NavController, viewModel: CreateNewPa
             value = repeat,
             onValueChange = { repeat = it },
             visualTransformation = if (showRepeat) VisualTransformation.None else PasswordVisualTransformation(),
-            trailing = { TextButton(onClick = { showRepeat = !showRepeat }) { Text(if (showRepeat) "🙈" else "👁", color = AppMuted) } }
+            trailing = { PasswordVisibilityIcon(isVisible = showRepeat, onClick = { showRepeat = !showRepeat }) }
         )
         Spacer(modifier = Modifier.height(38.dp))
         PrimaryButton(text = "Сохранить", onClick = { viewModel.save(password, repeat) })
